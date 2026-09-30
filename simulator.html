@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Cloud File Upload Management System</title>
+<style>
+:root{--bg:#f4f6fb;--card:#fff;--tx:#0f172a;--mut:#64748b;--bd:#e2e8f0;--slot:#f1f5f9;--brand:#4f46e5;--ok:#059669;--okbg:#ecfdf5;--bad:#dc2626;--badbg:#fef2f2;--info:#2563eb;--infobg:#eff6ff;--warn:#ea580c;--warnbg:#fff7ed;--sh:0 1px 2px rgba(15,23,42,.05),0 4px 14px rgba(15,23,42,.05);--font:Inter,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0b1020;--card:#131a2e;--tx:#e5e9f5;--mut:#94a3b8;--bd:#253052;--slot:#1a2340;--okbg:#0f2a24;--badbg:#301518;--infobg:#132347;--warnbg:#33200f;--sh:0 1px 2px rgba(0,0,0,.3)}}
+:root[data-theme="dark"]{--bg:#0b1020;--card:#131a2e;--tx:#e5e9f5;--mut:#94a3b8;--bd:#253052;--slot:#1a2340;--okbg:#0f2a24;--badbg:#301518;--infobg:#132347;--warnbg:#33200f;--sh:0 1px 2px rgba(0,0,0,.3)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--tx);font-family:var(--font);line-height:1.45;-webkit-font-smoothing:antialiased}
+.wrap{max-width:1080px;margin:0 auto;padding:20px 16px 40px}
+.hdr{display:flex;align-items:center;gap:14px;padding:18px 20px;border-radius:14px;background:linear-gradient(120deg,#1e1b4b,#4338ca 60%,#6366f1);color:#fff;margin-bottom:16px;box-shadow:var(--sh);flex-wrap:wrap}
+.logo{width:44px;height:44px;border-radius:12px;background:rgba(255,255,255,.16);display:grid;place-items:center;font-size:1.4rem}
+.hdr h1{margin:0;font-size:1.35rem;font-weight:700;letter-spacing:-.01em}.hdr p{margin:2px 0 0;font-size:.85rem;opacity:.85}
+.chip{margin-left:auto;font-size:.72rem;font-weight:600;letter-spacing:.04em;text-transform:uppercase;padding:5px 10px;border-radius:999px;background:rgba(255,255,255,.16)}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:14px;padding:16px 18px;margin-bottom:16px;box-shadow:var(--sh)}
+.card h2{margin:0 0 12px;font-size:.78rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--mut)}
+.status{padding:14px 18px 14px 44px;border-radius:12px;border:1px solid;border-left-width:6px;font-weight:700;font-size:1.05rem;margin-bottom:16px;position:relative;box-shadow:var(--sh);transition:.25s}
+.status::before{content:"";position:absolute;left:18px;top:19px;width:12px;height:12px;border-radius:50%;background:currentColor;animation:pl 1.6s infinite}
+@keyframes pl{50%{opacity:.35}}
+.status small{display:block;font-weight:500;font-size:.85rem;color:var(--tx);opacity:.8;margin-top:2px}
+.NORMAL{background:var(--okbg);border-color:var(--ok);color:var(--ok)}.FULL{background:var(--badbg);border-color:var(--bad);color:var(--bad)}
+.EMPTY{background:var(--infobg);border-color:var(--info);color:var(--info)}.RACE{background:var(--warnbg);border-color:var(--warn);color:var(--warn)}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px}
+.stat{border:1px solid var(--bd);border-radius:10px;padding:10px 12px;background:var(--slot)}
+.stat span{display:block;font-size:.68rem;font-weight:600;color:var(--mut);text-transform:uppercase;letter-spacing:.06em}
+.stat b{display:block;margin-top:2px;font-size:1.2rem;font-variant-numeric:tabular-nums}
+.flow{display:flex;align-items:stretch;gap:8px;flex-wrap:wrap}
+.fn{flex:1;min-width:130px;display:flex;flex-direction:column;align-items:center;gap:2px;padding:12px;border:1px solid var(--bd);border-radius:12px;background:var(--slot)}
+.fn i{font-style:normal;width:32px;height:32px;border-radius:9px;background:var(--brand);color:#fff;display:grid;place-items:center;font-weight:700;margin-bottom:4px}
+.fn b{font-size:.88rem}.fn small{color:var(--mut);font-size:.75rem}
+.ar{align-self:center;color:var(--mut);font-size:1.3rem}
+.buffer{display:flex;gap:10px;padding:14px;border:1px solid var(--bd);border-radius:12px;background:var(--slot);flex-wrap:wrap;transition:.2s}
+.buffer.race{border-color:var(--bad);background:var(--badbg);animation:sh .3s 3}
+@keyframes sh{25%{transform:translateX(-4px)}75%{transform:translateX(4px)}}
+.cell{flex:1;min-width:110px}
+.ptr{height:16px;font-size:.68rem;font-weight:700;color:var(--brand);letter-spacing:.05em}
+.slot{height:74px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;border-radius:10px;background:var(--card);color:var(--mut);border:2px dashed var(--bd);font-size:.8rem;padding:6px;text-align:center;word-break:break-all;transition:.2s}
+.slot.f{background:var(--infobg);border:1px solid var(--info);color:var(--tx);font-weight:600}
+.buffer.race .slot.f{background:var(--badbg);border-color:var(--bad)}
+.ext{font-size:.62rem;text-transform:uppercase;letter-spacing:.06em;background:var(--info);color:#fff;border-radius:4px;padding:1px 6px}
+.buffer.race .ext{background:var(--bad)}
+.tb{display:flex;gap:18px;flex-wrap:wrap;margin-top:14px}
+.grp .gl{font-size:.68rem;font-weight:700;color:var(--mut);text-transform:uppercase;letter-spacing:.07em;margin-bottom:6px}
+.grp .row{display:flex;gap:8px;flex-wrap:wrap}
+button,.file{font:inherit;font-size:.85rem;font-weight:600;padding:8px 14px;border-radius:9px;border:1px solid var(--bd);background:var(--card);color:var(--tx);cursor:pointer;transition:.15s;display:inline-block}
+button:hover:not(:disabled),.file:hover{border-color:var(--brand);transform:translateY(-1px)}
+button:disabled{opacity:.4;cursor:not-allowed}
+.b1{background:var(--brand);color:#fff;border-color:var(--brand)}.b2{background:var(--info);color:#fff;border-color:var(--info)}
+.b3{background:var(--warn);color:#fff;border-color:var(--warn)}.b4{background:transparent;color:var(--bad);border-color:var(--bad)}
+.ctl{display:flex;gap:18px;flex-wrap:wrap;font-size:.82rem;align-items:center;margin-top:16px;padding-top:14px;border-top:1px solid var(--bd);color:var(--mut)}
+.ctl input[type=range]{vertical-align:middle;width:110px;accent-color:var(--brand)}
+.ctl select{font:inherit;padding:3px 6px;border-radius:6px;border:1px solid var(--bd);background:var(--card);color:var(--tx)}
+.cols{display:grid;grid-template-columns:1.3fr 1fr;gap:16px}@media(max-width:760px){.cols{grid-template-columns:1fr}}
+.wr{display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--bd);font-size:.82rem}
+.wr:last-child{border:0}.wr b{width:38px}.wr .d{width:9px;height:9px;border-radius:50%;background:var(--mut)}
+.d.ac{background:var(--ok)}.d.wt{background:var(--bad)}
+.log{height:230px;overflow-y:auto;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.76rem;margin-top:10px}
+.log div{padding:4px 8px;border-bottom:1px solid var(--bd)}.log .w{color:var(--warn);background:var(--warnbg);font-weight:600;border-left:3px solid var(--warn)}
+.cloud{display:flex;flex-wrap:wrap;gap:6px;max-height:300px;overflow-y:auto}
+.cloud span{background:var(--okbg);color:var(--ok);border:1px solid var(--ok);border-radius:7px;padding:3px 9px;font-size:.78rem;font-weight:600}
+.cloud span.none{background:var(--slot);color:var(--mut);border-color:var(--bd);font-weight:500}
+.note{color:var(--mut);font-size:.78rem}
+.msg{margin-top:12px;padding:10px 14px;border-radius:10px;background:var(--warnbg);border-left:4px solid var(--warn);font-size:.86rem}
+.how{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:10px;font-size:.84rem}
+.how div{border:1px solid var(--bd);border-radius:10px;padding:10px 12px;color:var(--mut)}.how b{display:block;color:var(--tx);margin-bottom:2px}
+</style>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.9/babel.min.js"></script>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const { useState, useEffect } = React;
+const CAP = 5;
+const NAMES = ["document.pdf","image.jpg","report.docx","data.csv","presentation.pptx"];
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+const jit = () => 0.7 + Math.random() * 0.6;
+
+/* ---- Real synchronization primitives (async, FIFO wait queue) ---- */
+class Sem {
+  constructor(n) { this.n = n; this.q = []; }
+  acquire() { return new Promise(res => { if (this.n > 0) { this.n--; res(); } else this.q.push(res); }); }
+  release() { if (this.q.length) this.q.shift()(); else this.n++; }
+}
+
+/* ---- Shared state ---- */
+const fresh = () => ({ slots: Array(CAP).fill(null), inIdx: 0, outIdx: 0, count: 0,
+  empty: new Sem(CAP), full: new Sem(0), mutex: new Sem(1), owner: "",
+  sync: true, run: false, pauseP: false, pauseC: false, pMs: 1500, cMs: 2500, nP: 1,
+  ws: {}, cloud: [], log: [], processed: 0, race: false, prevented: false, lost: 0,
+  pending: [], fileN: 0, wgen: 0, uid: 0 });
+let S = fresh();
+const log = (s, text, warn) => { s.log.unshift({ t: new Date().toLocaleTimeString([], { hour12: false }), text, warn }); s.log.length = Math.min(s.log.length, 150); };
+const newFile = s => { if (s.pending.length) return s.pending.shift(); s.fileN++; return NAMES[(s.fileN - 1) % 5].replace(".", s.fileN + "."); };
+
+/* ---- PRODUCER: one insert operation ---- */
+async function put(s, w, me) {
+  const ok = () => S === s && s.wgen === w;
+  const f = newFile(s); log(s, `${me} created ${f}`);
+  if (s.sync) {
+    s.ws[me] = "WAITING: no empty slot";
+    if (s.empty.n === 0) log(s, `${me} BLOCKED on emptySemaphore (=0): buffer full`, true);
+    await s.empty.acquire(); if (!ok()) return;              // wait(empty)
+    s.ws[me] = "WAITING: mutex";
+    if (s.mutex.n === 0) log(s, `${me} waiting for mutex held by ${s.owner}`);
+    await s.mutex.acquire(); if (!ok()) return;              // wait(mutex)
+    s.owner = me; s.ws[me] = "IN CRITICAL SECTION"; log(s, `${me} LOCKED mutex`);
+    const i = s.inIdx; await sleep(250); if (!ok()) return;
+    s.slots[i] = f; s.inIdx = (i + 1) % CAP; s.count++;
+    log(s, `${f} added to buffer slot ${i}`);
+    s.owner = ""; s.mutex.release(); s.full.release();       // signal(mutex), signal(full)
+    log(s, `${me} UNLOCKED mutex`);
+  } else {
+    const i = s.inIdx; s.ws[me] = `WRITING slot ${i} (no lock)`;
+    log(s, `${me} read in=${i} (no mutex, no semaphore)`);
+    await sleep(350); if (!ok()) return;
+    if (s.slots[i] !== null) {
+      s.race = true; s.lost++;
+      log(s, `${me} overwrote ${s.slots[i]} in slot ${i} - FILE LOST`, true);
+      log(s, "RACE CONDITION DETECTED", true);
+    }
+    s.slots[i] = f; s.inIdx = (i + 1) % CAP; s.count++;
+    log(s, `${me} wrote ${f} to slot ${i}`);
+  }
+  if (/^PU/.test(me)) delete s.ws[me]; else s.ws[me] = "IDLE";
+}
+
+/* ---- CONSUMER: one remove + upload operation ---- */
+async function take(s, w, me) {
+  const ok = () => S === s && s.wgen === w;
+  let f;
+  if (s.sync) {
+    s.ws[me] = "WAITING: buffer empty";
+    if (s.full.n === 0) log(s, `${me} BLOCKED on fullSemaphore (=0): buffer empty`, true);
+    await s.full.acquire(); if (!ok()) return;               // wait(full)
+    await s.mutex.acquire(); if (!ok()) return;              // wait(mutex)
+    s.owner = me; s.ws[me] = "IN CRITICAL SECTION"; log(s, `${me} LOCKED mutex`);
+    const i = s.outIdx; await sleep(250); if (!ok()) return;
+    f = s.slots[i]; s.slots[i] = null; s.outIdx = (i + 1) % CAP; s.count--;
+    s.owner = ""; s.mutex.release(); s.empty.release();      // signal(mutex), signal(empty)
+    log(s, `${me} removed ${f} and UNLOCKED mutex`);
+  } else {
+    const i = s.outIdx; s.ws[me] = "READING (no lock)"; await sleep(350); if (!ok()) return;
+    f = s.slots[i];
+    if (f == null) { log(s, `${me} read an empty slot (no full semaphore)`, true); s.ws[me] = "IDLE"; return; }
+    s.slots[i] = null; s.outIdx = (i + 1) % CAP; s.count = Math.max(0, s.count - 1);
+  }
+  s.ws[me] = `UPLOADING ${f}`; log(s, `Consumer processing ${f}`);
+  await sleep(400); if (!ok()) return;
+  s.cloud.push(f); s.processed++; log(s, `${f} moved to simulated cloud storage`);
+  if (/^CU/.test(me)) delete s.ws[me]; else s.ws[me] = "IDLE";
+}
+
+/* ---- Worker threads (async loops) ---- */
+async function prodLoop(s, w, id) {
+  const me = "P" + id, ok = () => S === s && s.wgen === w;
+  while (ok()) {
+    if (!s.run || s.pauseP || id > s.nP) { s.ws[me] = id > s.nP ? "OFF" : "PAUSED"; await sleep(200); continue; }
+    s.ws[me] = "IDLE"; await sleep(s.pMs * jit());
+    if (!ok() || !s.run || s.pauseP || id > s.nP) continue;
+    await put(s, w, me);
+  }
+}
+async function consLoop(s, w) {
+  const ok = () => S === s && s.wgen === w;
+  while (ok()) {
+    if (!s.run || s.pauseC) { s.ws.C1 = "PAUSED"; await sleep(200); continue; }
+    s.ws.C1 = "IDLE"; await sleep(s.cMs * jit());
+    if (!ok() || !s.run || s.pauseC) continue;
+    await take(s, w, "C1");
+  }
+}
+function spawn(s) { const w = ++s.wgen; [1, 2, 3].forEach(id => prodLoop(s, w, id)); consLoop(s, w); }
+spawn(S);
+
+/* ---- Actions ---- */
+const simRace = () => {
+  const s = S; if (!s.sync) return;
+  s.sync = false; s.prevented = false; s.pauseP = false; s.run = true; s.nP = 2;
+  log(s, "Synchronization DISABLED (mutex + semaphores bypassed)", true);
+  spawn(s); const w = s.wgen;
+  put(s, w, "P1"); put(s, w, "P2");            // two producers start at the same instant
+};
+const restore = () => {
+  const s = S, files = s.slots.filter(Boolean);
+  s.sync = true; s.race = false; s.prevented = true;
+  s.slots = Array(CAP).fill(null); files.forEach((f, i) => s.slots[i] = f);
+  s.inIdx = files.length % CAP; s.outIdx = 0; s.count = files.length;
+  s.empty = new Sem(CAP - files.length); s.full = new Sem(files.length); s.mutex = new Sem(1); s.owner = "";
+  log(s, `Synchronization restored: Mutex ON. Race prevented. ${s.lost} file(s) were lost.`);
+  spawn(s);
+};
+const reset = () => { S = fresh(); spawn(S); };
+const upload = () => put(S, S.wgen, "PU" + (++S.uid));
+const process_ = () => take(S, S.wgen, "CU" + (++S.uid));
+const testFull = () => { const s = S; s.run = true; s.pauseC = true; s.pauseP = false; s.nP = 2; s.pMs = 500; };
+const testEmpty = () => { const s = S; s.run = true; s.pauseP = true; s.pauseC = false; s.cMs = 600; };
+const pick = e => { const s = S; [...e.target.files].forEach(f => s.pending.push(f.name)); log(s, `${e.target.files.length} real file name(s) queued for producers (nothing is uploaded)`); e.target.value = ""; };
+
+function App() {
+  const [, tick] = useState(0);
+  useEffect(() => { const id = setInterval(() => tick(x => x + 1), 100); return () => clearInterval(id); }, []);
+  const s = S, set = (k, v) => { s[k] = v; tick(x => x + 1); };
+  const actual = s.slots.filter(Boolean).length;
+  let status = "NORMAL", info = "";
+  if (s.race) { status = "RACE"; info = "Multiple producers attempted to access the shared buffer simultaneously without mutual exclusion."; }
+  else if (s.sync && s.empty.q.length > 0) { status = "FULL"; info = "Producer is waiting because no empty slot is available."; }
+  else if (s.sync && s.full.q.length > 0 && s.count === 0) { status = "EMPTY"; info = "Consumer is waiting because no file is available."; }
+  const titles = { NORMAL: "NORMAL", FULL: "BUFFER FULL", EMPTY: "BUFFER EMPTY", RACE: "⚠ RACE CONDITION DETECTED" };
+  const mutexL = !s.sync ? "DISABLED" : s.mutex.n === 0 ? "LOCKED" : "UNLOCKED";
+  const pw = Object.entries(s.ws).filter(([k, v]) => k[0] === "P").map(([, v]) => v);
+  const prod = pw.some(v => v.startsWith("WAITING")) ? "WAITING" : pw.some(v => /CRITICAL|WRITING/.test(v)) ? "ACTIVE" : "IDLE";
+  const cons = s.ws.C1 && s.ws.C1.startsWith("WAITING") ? "WAITING" : s.ws.C1 && !/IDLE|PAUSED/.test(s.ws.C1) ? "ACTIVE" : "IDLE";
+  return (
+    <div className="wrap">
+      <div className="hdr"><div className="logo">☁️</div><div><h1>Cloud File Upload Management System</h1><p>Producer-Consumer Synchronization Simulator</p></div><span className="chip">Operating Systems Lab</span></div>
+      <div className={"status " + status}>{titles[status]}{info && <small>{info}</small>}</div>
+
+      <div className="card"><div className="stats">
+        <div className="stat"><span>Buffer Capacity</span><b>{CAP}</b></div>
+        <div className="stat"><span>Files in Buffer</span><b>{actual}</b></div>
+        <div className="stat"><span>Empty Slots</span><b>{s.sync ? s.empty.n : "bypassed"}</b></div>
+        <div className="stat"><span>Full Slots</span><b>{s.sync ? s.full.n : "bypassed"}</b></div>
+        <div className="stat"><span>Processed Files</span><b>{s.processed}</b></div>
+        <div className="stat"><span>Mutex</span><b style={{ color: !s.sync ? "var(--orange)" : s.mutex.n === 0 ? "var(--red)" : "var(--green)" }}>{mutexL}{s.owner && " ("+s.owner+")"}</b></div>
+        <div className="stat"><span>Producer</span><b>{prod}</b></div>
+        <div className="stat"><span>Consumer</span><b>{cons}</b></div>
+        <div className="stat"><span>Race Condition</span><b>{s.race ? "Active" : s.prevented ? "Prevented" : "None"}</b></div>
+      </div></div>
+
+      <div className="card">
+        <h2>Pipeline</h2>
+        <div className="flow">
+          <div className="fn"><i>P</i><b>{s.nP > 1 ? "Producers" : "Producer"}</b><small>{prod}</small></div><span className="ar">→</span>
+          <div className="fn"><i>B</i><b>Shared Buffer</b><small>{actual} / {CAP} slots</small></div><span className="ar">→</span>
+          <div className="fn"><i>C</i><b>Cloud Worker</b><small>{cons}</small></div><span className="ar">→</span>
+          <div className="fn"><i>☁</i><b>Cloud Storage</b><small>{s.cloud.length} files</small></div>
+        </div>
+      </div>
+
+      <div className="card">
+        <h2>Shared Buffer (circular, bounded)</h2>
+        <div className={"buffer" + (s.race ? " race" : "")}>
+          {s.slots.map((f, i) => (
+            <div className="cell" key={i}>
+              <div className="ptr">{i === s.inIdx ? "▼ IN " : ""}{i === s.outIdx ? "▼ OUT" : ""}</div>
+              <div className={"slot" + (f ? " f" : "")}>{f ? <><span className="ext">{f.split(".").pop()}</span><span>{f}</span></> : "Empty"}</div>
+            </div>))}
+        </div>
+        {!s.sync && <div className="msg">Counter says <b>{s.count}</b> files, but the buffer really holds <b>{actual}</b>. Files lost: <b>{s.lost}</b>. Click <b>Restore Synchronization</b> to repair.</div>}
+        <div className="tb">
+          <div className="grp"><div className="gl">Run</div><div className="row">
+            <button className={s.run ? "b4" : "b1"} onClick={() => set("run", !s.run)}>{s.run ? "Pause Auto Run" : "Start Auto Run"}</button>
+            <button className="b4" onClick={reset}>Reset Simulation</button>
+          </div></div>
+          <div className="grp"><div className="gl">Manual</div><div className="row">
+            <button className="b2" onClick={upload}>Upload File</button>
+            <button className="b2" onClick={process_}>Process File</button>
+            <label className="file">Queue real files<input type="file" multiple hidden onChange={pick} /></label>
+          </div></div>
+          <div className="grp"><div className="gl">Scenarios</div><div className="row">
+            <button onClick={testFull}>Test Buffer Full</button>
+            <button onClick={testEmpty}>Test Buffer Empty</button>
+            <button className="b3" onClick={simRace} disabled={!s.sync}>Simulate Race Condition</button>
+            {!s.sync && <button className="b1" onClick={restore}>Restore Synchronization</button>}
+          </div></div>
+        </div>
+        <div className="ctl">
+          <label>Producers: <select value={s.nP} onChange={e => set("nP", +e.target.value)}>{[1, 2, 3].map(n => <option key={n}>{n}</option>)}</select></label>
+          <label>Producer delay <input type="range" min="300" max="3000" step="100" value={s.pMs} onChange={e => set("pMs", +e.target.value)} /> {s.pMs}ms</label>
+          <label>Consumer delay <input type="range" min="300" max="4000" step="100" value={s.cMs} onChange={e => set("cMs", +e.target.value)} /> {s.cMs}ms</label>
+          <label><input type="checkbox" checked={s.pauseP} onChange={e => set("pauseP", e.target.checked)} /> Stop producers</label>
+          <label><input type="checkbox" checked={s.pauseC} onChange={e => set("pauseC", e.target.checked)} /> Stop consumer</label>
+        </div>
+      </div>
+
+      <div className="cols">
+        <div className="card">
+          <h2>Worker Threads</h2>
+          {Object.entries(s.ws).filter(([, v]) => v !== "OFF").map(([k, v]) => <div className="wr" key={k}><i className={"d " + (/WAIT/.test(v) ? "wt" : /CRITICAL|WRITING|READING|UPLOAD/.test(v) ? "ac" : "")}></i><b>{k}</b><span>{v.toLowerCase()}</span></div>)}
+          <h2 style={{ marginTop: 16 }}>Activity Log</h2>
+          <div className="log">{s.log.length === 0 ? <div>Click "Start Auto Run" or "Upload File".</div> : s.log.map((e, i) => <div key={i} className={e.warn ? "w" : ""}>{e.t}: {e.text}</div>)}</div>
+        </div>
+        <div className="card">
+          <h2>☁️ Simulated Cloud Storage ({s.cloud.length})</h2>
+          <div className="cloud">{s.cloud.length === 0 ? <span className="none">No files processed yet</span> : s.cloud.map((f, i) => <span key={i}>{f}</span>)}</div>
+          <p className="note">In-memory only. Nothing leaves your browser.</p>
+        </div>
+      </div>
+
+      <div className="card"><h2>How it works</h2><div className="how">
+        <div><b>Producer</b>Generates file-upload requests.</div>
+        <div><b>Buffer</b>Stores a limited number of pending files.</div>
+        <div><b>Consumer</b>Processes files from the buffer.</div>
+        <div><b>Mutex</b>Ensures only one process accesses the shared buffer at a time.</div>
+        <div><b>Empty Semaphore</b>Represents available empty buffer slots.</div>
+        <div><b>Full Semaphore</b>Represents files available for consumption.</div>
+        <div><b>Buffer Full</b>Producer must wait.</div>
+        <div><b>Buffer Empty</b>Consumer must wait.</div>
+        <div><b>Race Condition</b>Occurs when multiple producers/consumers access shared data without synchronization.</div>
+      </div></div>
+    </div>
+  );
+}
+ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+</script>
+</body>
+</html>

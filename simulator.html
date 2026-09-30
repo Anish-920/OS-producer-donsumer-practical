@@ -218,7 +218,7 @@ function App() {
   const cons = s.ws.C1 && s.ws.C1.startsWith("WAITING") ? "WAITING" : s.ws.C1 && !/IDLE|PAUSED/.test(s.ws.C1) ? "ACTIVE" : "IDLE";
   return (
     <div className="wrap">
-      <div className="hdr"><div className="logo">☁️</div><div><h1>Cloud File Upload Management System</h1><p>Producer-Consumer Synchronization Simulator</p></div><span className="chip">Operating Systems Lab</span></div>
+      <div className="hdr"><div className="logo">☁️</div><div><h1>Cloud File Upload Queue</h1><p>Producer-Consumer Synchronization Simulator</p></div><span className="chip">Operating Systems Lab</span></div>
       <div className={"status " + status}>{titles[status]}{info && <small>{info}</small>}</div>
 
       <div className="card"><div className="stats">
